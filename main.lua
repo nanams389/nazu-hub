@@ -1,137 +1,146 @@
 --==============================
--- nazu hub v2 - Exterminate Edition
+-- nazu hub v3 - GOD SPEED & FLY
 --==============================
 local lp = game:GetService("Players").LocalPlayer
 local rs = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local PlayerList = Instance.new("ScrollingFrame")
 local FlingButton = Instance.new("TextButton")
 local FlingAllButton = Instance.new("TextButton")
+local FlyButton = Instance.new("TextButton")
 local TargetLabel = Instance.new("TextLabel")
 
--- UIデザイン維持
-ScreenGui.Name = "nazu_hub_v2"
+-- UIデザイン強化 (ネオンブラック & 角丸)
+ScreenGui.Name = "nazu_hub_v3"
 ScreenGui.Parent = game:GetService("CoreGui")
 ScreenGui.ResetOnSpawn = false
 
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -175)
-MainFrame.Size = UDim2.new(0, 250, 0, 380)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 260, 0, 420)
 MainFrame.Active = true
 MainFrame.Draggable = true
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+local MainCorner = Instance.new("UICorner", MainFrame)
+MainCorner.CornerRadius = UDim.new(0, 15)
 
 Title.Parent = MainFrame
-Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "nazu hub v2"
-Title.TextColor3 = Color3.fromRGB(255, 0, 50)
-Title.TextSize = 24
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "NAZU HUB V3"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 26
 Title.Font = Enum.Font.GothamBold
-Title.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
+Title.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 15)
 
 TargetLabel.Parent = MainFrame
-TargetLabel.Position = UDim2.new(0, 0, 0, 50)
+TargetLabel.Position = UDim2.new(0, 0, 0, 55)
 TargetLabel.Size = UDim2.new(1, 0, 0, 25)
 TargetLabel.Text = "Target: None"
-TargetLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+TargetLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 TargetLabel.BackgroundTransparency = 1
 
 PlayerList.Parent = MainFrame
-PlayerList.Position = UDim2.new(0.05, 0, 0.22, 0)
-PlayerList.Size = UDim2.new(0.9, 0, 0.4, 0)
-PlayerList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+PlayerList.Position = UDim2.new(0.05, 0, 0.2, 0)
+PlayerList.Size = UDim2.new(0.9, 0, 0.35, 0)
+PlayerList.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 PlayerList.BorderSizePixel = 0
 local UIList = Instance.new("UIListLayout", PlayerList)
 UIList.Padding = UDim.new(0, 5)
 
 --==============================
--- 🌪️ 殲滅型 Fling ロジック
+-- 🚀 Fling & Fly ロジック
 --==============================
 local target = nil
 local flingActive = false
 local flingAllActive = false
+local flying = false
+local flySpeed = 50
 
--- 物理破壊エネルギー最大化
-local function SuperPowerUp()
+-- 物理破壊最大化 (God Speed)
+local function GodFling()
     local c = lp.Character
-    if not c then return end
-    local hrp = c:FindFirstChild("HumanoidRootPart")
+    local hrp = c and c:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
     c.Humanoid.PlatformStand = true
     
-    -- 高速回転と疑似的な重力無視
     local bav = hrp:FindFirstChild("FlingEngine") or Instance.new("BodyAngularVelocity")
     bav.Name = "FlingEngine"
     bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-    bav.P = 1250000 -- 出力アップ
+    bav.P = 2000000 
     bav.AngularVelocity = Vector3.new(0, 999999, 0)
     bav.Parent = hrp
 
     for _, v in pairs(c:GetDescendants()) do
         if v:IsA("BasePart") then
             v.CanCollide = false
-            v.Velocity = Vector3.new(25000, 25000, 25000) -- 衝突エネルギー強化
+            v.Velocity = Vector3.new(50000, 50000, 50000) -- 出力倍増
         end
     end
 end
 
--- ターゲットを飛ばしたか判定する関数
-local function isFlinged(targetChar)
-    if not targetChar then return true end
-    local tHrp = targetChar:FindFirstChild("HumanoidRootPart")
-    if not tHrp then return true end
-    
-    -- 相手の速度が異常に速い、または高度が極端に変わったら「飛ばした」とみなす
-    if tHrp.Velocity.Magnitude > 150 or tHrp.Position.Y > 500 or tHrp.Position.Y < -50 then
-        return true
-    end
-    return false
-end
+-- Fly 機能
+task.spawn(function()
+    local bg = Instance.new("BodyGyro")
+    local bv = Instance.new("BodyVelocity")
+    bg.P = 9e4
+    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
 
--- メインループ (最速処理)
+    rs.RenderStepped:Connect(function()
+        if flying then
+            local c = lp.Character
+            local hrp = c and c:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                bg.Parent = hrp
+                bv.Parent = hrp
+                bg.CFrame = workspace.CurrentCamera.CFrame
+                local dir = Vector3.new(0,0,0)
+                if uis:IsKeyDown(Enum.KeyCode.W) then dir = dir + workspace.CurrentCamera.CFrame.LookVector end
+                if uis:IsKeyDown(Enum.KeyCode.S) then dir = dir - workspace.CurrentCamera.CFrame.LookVector end
+                if uis:IsKeyDown(Enum.KeyCode.D) then dir = dir + workspace.CurrentCamera.CFrame.RightVector end
+                if uis:IsKeyDown(Enum.KeyCode.A) then dir = dir - workspace.CurrentCamera.CFrame.RightVector end
+                bv.Velocity = dir * flySpeed
+            end
+        else
+            bg.Parent = nil
+            bv.Parent = nil
+        end
+    end)
+end)
+
+-- メイン実行ループ (Fling All 爆速化)
 rs.RenderStepped:Connect(function()
-    if not (flingActive or flingAllActive) then
-        if lp.Character and lp.Character:FindFirstChild("Humanoid") then
-            lp.Character.Humanoid.PlatformStand = false
-        end
-        return 
-    end
-    
-    local c = lp.Character
-    local hrp = c and c:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    if not (flingActive or flingAllActive) then return end
+    GodFling()
 
-    SuperPowerUp()
-
+    local hrp = lp.Character.HumanoidRootPart
     if flingAllActive then
-        -- サーバー内の全員をスキャンして未吹っ飛ばしの人を探す
-        for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local tHrp = p.Character.HumanoidRootPart
-                -- まだ飛んでいない奴がいたらワープして仕留める
-                if not isFlinged(p.Character) then
-                    hrp.CFrame = tHrp.CFrame * CFrame.new(0, -1.8, 0) * CFrame.Angles(math.rad(90), 0, 0)
-                    break -- 一人仕留めるまで集中
+                -- 吹っ飛び判定を甘くして次へ行く速度を上げる
+                if tHrp.Velocity.Magnitude < 200 then
+                    hrp.CFrame = tHrp.CFrame * CFrame.new(0, -1.8, 0)
+                    break
                 end
             end
         end
     elseif flingActive and target and target.Character then
         local tHrp = target.Character:FindFirstChild("HumanoidRootPart")
         if tHrp then
-            -- ターゲットの真下から高速バイブレーション攻撃
-            hrp.CFrame = tHrp.CFrame * CFrame.new(math.random(-1,1)/10, -1.8, math.random(-1,1)/10)
+            hrp.CFrame = tHrp.CFrame * CFrame.new(0, -1.8, 0)
         end
     end
 end)
 
 --==============================
--- UI更新・ボタン設定
+-- UIインタラクション
 --==============================
 local function updateList()
     for _, v in pairs(PlayerList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
@@ -152,33 +161,47 @@ local function updateList()
 end
 updateList()
 
+local function StyleButton(btn, color)
+    btn.BackgroundColor3 = color
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+end
+
 FlingButton.Parent = MainFrame
-FlingButton.Position = UDim2.new(0.05, 0, 0.65, 0)
-FlingButton.Size = UDim2.new(0.9, 0, 0, 45)
-FlingButton.Text = "Kill Target (OFF)"
-FlingButton.BackgroundColor3 = Color3.fromRGB(40, 5, 5)
-FlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-FlingButton.Font = Enum.Font.GothamBold
-Instance.new("UICorner", FlingButton).CornerRadius = UDim.new(0, 8)
+FlingButton.Position = UDim2.new(0.05, 0, 0.58, 0)
+FlingButton.Size = UDim2.new(0.9, 0, 0, 40)
+FlingButton.Text = "FAST KILL (OFF)"
+StyleButton(FlingButton, Color3.fromRGB(50, 0, 0))
 
 FlingButton.MouseButton1Click:Connect(function()
     if not target then return end
     flingActive = not flingActive
-    FlingButton.Text = flingActive and "KILLING... (ON)" or "Kill Target (OFF)"
-    FlingButton.BackgroundColor3 = flingActive and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(40, 5, 5)
+    FlingButton.Text = flingActive and "KILLING... (ON)" or "FAST KILL (OFF)"
+    FlingButton.BackgroundColor3 = flingActive and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(50, 0, 0)
 end)
 
 FlingAllButton.Parent = MainFrame
-FlingAllButton.Position = UDim2.new(0.05, 0, 0.8, 0)
-FlingAllButton.Size = UDim2.new(0.9, 0, 0, 45)
-FlingAllButton.Text = "GENOCIDE MODE (OFF)"
-FlingAllButton.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
-FlingAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-FlingAllButton.Font = Enum.Font.GothamBold
-Instance.new("UICorner", FlingAllButton).CornerRadius = UDim.new(0, 8)
+FlingAllButton.Position = UDim2.new(0.05, 0, 0.7, 0)
+FlingAllButton.Size = UDim2.new(0.9, 0, 0, 40)
+FlingAllButton.Text = "GOD GENOCIDE (OFF)"
+StyleButton(FlingAllButton, Color3.fromRGB(80, 0, 0))
 
 FlingAllButton.MouseButton1Click:Connect(function()
     flingAllActive = not flingAllActive
-    FlingAllButton.Text = flingAllActive and "GENOCIDE (ON)" or "GENOCIDE MODE (OFF)"
-    FlingAllButton.BackgroundColor3 = flingAllActive and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(60, 0, 0)
+    FlingAllButton.Text = flingAllActive and "GENOCIDE (ON)" or "GOD GENOCIDE (OFF)"
+    FlingAllButton.BackgroundColor3 = flingAllActive and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(80, 0, 0)
+end)
+
+FlyButton.Parent = MainFrame
+FlyButton.Position = UDim2.new(0.05, 0, 0.82, 0)
+FlyButton.Size = UDim2.new(0.9, 0, 0, 40)
+FlyButton.Text = "FLY MODE (OFF)"
+StyleButton(FlyButton, Color3.fromRGB(0, 50, 0))
+
+FlyButton.MouseButton1Click:Connect(function()
+    flying = not flying
+    FlyButton.Text = flying and "FLYING (ON)" or "FLY MODE (OFF)"
+    FlyButton.BackgroundColor3 = flying and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(0, 50, 0)
 end)
