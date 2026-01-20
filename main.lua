@@ -1,5 +1,5 @@
 --==============================
--- nazu hub - Ultimate Fling V2
+-- nazu hub v2 - Perfect Fling Edition
 --==============================
 local lp = game:GetService("Players").LocalPlayer
 local rs = game:GetService("RunService")
@@ -11,12 +11,11 @@ local FlingButton = Instance.new("TextButton")
 local FlingAllButton = Instance.new("TextButton")
 local TargetLabel = Instance.new("TextLabel")
 
--- UI親設定
+-- UI基本設定 (デザインは維持)
 ScreenGui.Name = "nazu_hub_v2"
 ScreenGui.Parent = game:GetService("CoreGui")
 ScreenGui.ResetOnSpawn = false
 
--- UIデザイン (さらにリアルに)
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -24,8 +23,7 @@ MainFrame.Position = UDim2.new(0.5, -125, 0.5, -175)
 MainFrame.Size = UDim2.new(0, 250, 0, 380)
 MainFrame.Active = true
 MainFrame.Draggable = true
-local UICorner = Instance.new("UICorner", MainFrame)
-UICorner.CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
 Title.Parent = MainFrame
 Title.Size = UDim2.new(1, 0, 0, 45)
@@ -52,68 +50,76 @@ local UIList = Instance.new("UIListLayout", PlayerList)
 UIList.Padding = UDim.new(0, 5)
 
 --==============================
--- 🌪️ Fling 心臓部 (超高速回転ロジック)
+-- 🌪️ 改良型 Fling ロジック (対R15必殺)
 --==============================
 local target = nil
 local flingActive = false
 local flingAllActive = false
 
--- 自分の体を「武器」に変える関数
-local function setupFling()
+-- 物理設定の最適化
+local function PowerUpCharacter()
     local c = lp.Character
-    local hrp = c and c:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    
-    -- 古い回転パーツを掃除
-    for _, v in pairs(hrp:GetChildren()) do
-        if v.Name == "FlingEngine" then v:Destroy() end
+    if not c then return end
+    local hum = c:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = true -- 自分のアニメーションを止めて物理挙動を安定させる
     end
-
-    -- 超高速回転パーツ作成
-    local bav = Instance.new("BodyAngularVelocity")
-    bav.Name = "FlingEngine"
-    bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-    bav.P = 1000000
-    bav.AngularVelocity = Vector3.new(0, 999999, 0) -- 秒間約100万回転
-    bav.Parent = hrp
-
-    -- 物理的な衝突を強化
     for _, part in pairs(c:GetDescendants()) do
         if part:IsA("BasePart") then
-            part.CanCollide = false -- 自分が引っかからないように
-            part.Velocity = Vector3.new(99999, 99999, 99999)
+            part.CanCollide = false
+            part.Velocity = Vector3.new(10000, 10000, 10000) -- 常に高負荷をかける
         end
     end
 end
 
--- メイン実行ループ
-rs.Stepped:Connect(function()
-    if not (flingActive or flingAllActive) then return end
+-- 回転エンジンの作成
+local function createFlingEngine()
+    local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    local engine = hrp:FindFirstChild("FlingEngine") or Instance.new("BodyAngularVelocity")
+    engine.Name = "FlingEngine"
+    engine.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    engine.P = 1000000
+    engine.AngularVelocity = Vector3.new(0, 500000, 0) -- 回転数を調整
+    engine.Parent = hrp
+end
+
+-- メインループ
+rs.RenderStepped:Connect(function()
+    if not (flingActive or flingAllActive) then
+        local c = lp.Character
+        if c and c:FindFirstChildOfClass("Humanoid") then
+            c.Humanoid.PlatformStand = false
+        end
+        return 
+    end
     
     local c = lp.Character
     local hrp = c and c:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    setupFling() -- 回転を維持
+    PowerUpCharacter()
+    createFlingEngine()
 
     if flingAllActive then
-        -- 全員を順番に吹っ飛ばす (Fling All)
-        for _, p in pairs(game.Players:GetPlayers()) do
+        for _, p in pairs(game:GetService("Players"):GetPlayers()) do
             if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                hrp.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 0.05)
+                -- 相手の下から突き上げるようなポジション
+                hrp.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, -1.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
             end
         end
     elseif flingActive and target and target.Character then
-        -- 特定のターゲットを吹っ飛ばす
         local tHrp = target.Character:FindFirstChild("HumanoidRootPart")
         if tHrp then
-            hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 0.01) -- 中心にめり込む
+            -- ターゲットの中心で高速回転＋微細な振動で物理をバグらせる
+            hrp.CFrame = tHrp.CFrame * CFrame.new(0, -1, 0)
         end
     end
 end)
 
 --==============================
--- ボタンとリストの更新
+-- UI更新用関数
 --==============================
 local function updateList()
     for _, v in pairs(PlayerList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
