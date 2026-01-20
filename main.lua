@@ -1,5 +1,5 @@
 --==============================
--- nazu hub v3 - God Speed Genocide
+-- nazu hub v3 - Instant Fusion Fling
 --==============================
 local lp = game:GetService("Players").LocalPlayer
 local rs = game:GetService("RunService")
@@ -51,7 +51,7 @@ PlayerList.BorderSizePixel = 0
 Instance.new("UIListLayout", PlayerList).Padding = UDim.new(0, 5)
 
 --==============================
--- 🌪️ 最速射出 Fling ロジック
+-- 🌪️ 合体型・爆速 Fling ロジック
 --==============================
 local target = nil
 local flingActive = false
@@ -59,33 +59,34 @@ local flingAllActive = false
 local flying = false
 local flySpeed = 50
 
--- 🚀 物理エンジンを破壊する衝突関数
-local function InstantFling(TargetChar)
+-- 🚀 物理エンジンを「合体」で破壊する関数
+local function FusionFling(TargetChar)
     local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
     local tHrp = TargetChar:FindFirstChild("HumanoidRootPart")
     if not hrp or not tHrp then return end
 
     lp.Character.Humanoid.PlatformStand = true
     
+    -- 回転力をさらに安定・強化
     local bav = hrp:FindFirstChild("FlingEngine") or Instance.new("BodyAngularVelocity")
     bav.Name = "FlingEngine"
     bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-    bav.P = 5000000 -- 最大出力
+    bav.P = 8000000 -- 最大級の出力
     bav.AngularVelocity = Vector3.new(0, 9999999, 0)
     bav.Parent = hrp
 
-    -- 高速振動めり込み (これで一瞬で飛ばす)
-    local off = math.random(-2, 2) / 10
-    hrp.CFrame = tHrp.CFrame * CFrame.new(off, -1.8, off) * CFrame.Angles(math.rad(90), 0, 0)
-    hrp.Velocity = Vector3.new(100000, 100000, 100000)
+    -- 🌟 修正ポイント：相手と「合体」する位置に固定
+    -- 0.01秒ごとに「相手の座標 + わずかなランダム振動」で物理バグを誘発
+    local shake = Vector3.new(math.random(-10, 10)/100, math.random(-10, 10)/100, math.random(-10, 10)/100)
+    hrp.CFrame = tHrp.CFrame * CFrame.new(shake) 
+    hrp.Velocity = Vector3.new(150000, 150000, 150000) -- 衝突エネルギー
 end
 
--- Fly ロジック (変更なし)
+-- Fly ロジック (維持)
 task.spawn(function()
     local bg = Instance.new("BodyGyro")
     local bv = Instance.new("BodyVelocity")
-    bg.P = 9e4
-    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+    bg.P = 9e4; bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
     bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
     rs.RenderStepped:Connect(function()
         if flying then
@@ -106,7 +107,7 @@ task.spawn(function()
     end)
 end)
 
--- 🌪️ メインループ (RenderSteppedで最速回し)
+-- 🌪️ メインループ
 rs.RenderStepped:Connect(function()
     if not (flingActive or flingAllActive) then
         if lp.Character and lp.Character:FindFirstChild("Humanoid") then
@@ -119,20 +120,19 @@ rs.RenderStepped:Connect(function()
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local tHrp = p.Character.HumanoidRootPart
-                -- 相手がまだ飛んでいないなら瞬殺
-                if tHrp.Velocity.Magnitude < 150 then
-                    InstantFling(p.Character)
+                if tHrp.Velocity.Magnitude < 200 then
+                    FusionFling(p.Character)
                     break 
                 end
             end
         end
     elseif flingActive and target and target.Character then
-        InstantFling(target.Character)
+        FusionFling(target.Character)
     end
 end)
 
 --==============================
--- UI更新・リスト
+-- UI更新・ボタン設定 (維持)
 --==============================
 local function updateList()
     for _, v in pairs(PlayerList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
@@ -155,11 +155,11 @@ local function StyleButton(btn, color)
 end
 
 FlingButton.Parent = MainFrame; FlingButton.Position = UDim2.new(0.05, 0, 0.58, 0); FlingButton.Size = UDim2.new(0.9, 0, 0, 40)
-FlingButton.Text = "INSTANT KILL (OFF)"; StyleButton(FlingButton, Color3.fromRGB(50, 0, 0))
+FlingButton.Text = "FUSION KILL (OFF)"; StyleButton(FlingButton, Color3.fromRGB(50, 0, 0))
 FlingButton.MouseButton1Click:Connect(function()
     if not target then return end
     flingActive = not flingActive
-    FlingButton.Text = flingActive and "KILLING..." or "INSTANT KILL (OFF)"
+    FlingButton.Text = flingActive and "FUSING..." or "FUSION KILL (OFF)"
     FlingButton.BackgroundColor3 = flingActive and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(50, 0, 0)
 end)
 
